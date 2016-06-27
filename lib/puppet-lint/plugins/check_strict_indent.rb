@@ -133,8 +133,8 @@ PuppetLint.new_check(:'strict_indent') do
         if not [:COMMENT, :NEWLINE].include?(token.next_token.type)
           notify :warning, {
             :message => "indent should be #{expected} chars and is #{actual}",
-            :line    => token.line,
-            :column  => token.column,
+            :line    => token.next_token.line,
+            :column  => token.next_token.column,
             :token   => token,
             :indent  => expected,
           }
@@ -147,6 +147,10 @@ PuppetLint.new_check(:'strict_indent') do
     char_for_indent = ' '
     if problem[:token].next_token.type == :INDENT
       problem[:token].next_token.value = char_for_indent * problem[:indent]
+    elsif problem[:token].next_token.type == :VARIABLE
+      add_indent = char_for_indent * problem[:indent]
+      index = tokens.index(problem[:token].next_token)
+      tokens.insert(index, PuppetLint::Lexer::Token.new(:WHITESPACE, add_indent , add_indent.length, 0))
     else
       problem[:token].next_token.value = char_for_indent * problem[:indent] + problem[:token].next_token.value
     end
